@@ -26,7 +26,7 @@ SINGLE=false
 CANAL=false
 CLUSTER_NAME="kind"
 # Available node images: https://github.com/kubernetes-sigs/kind/releases
-NODE_IMAGE="kindest/node:v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694"
+# NODE_IMAGE="kindest/node:v1.18.0@sha256:0e20578828edd939d25eb98496a685c76c98d54084932f76069f886ec315d694"
 
 # get the options
 while getopts cn:s c ; do
@@ -47,7 +47,8 @@ fi
 
 KUBECTL_BIN="/usr/local/bin/kubectl"
 KIND_BIN="/usr/local/bin/kind"
-KIND_VERSION="v0.7.0" 
+KIND_VERSION="v0.8.1"
+CANAL_VERSION="v3.14"
 
 # If kind exists, compare current version to desired one: kind version | awk '{print $2}'
  if [ -e $KIND_BIN ]; then
@@ -82,7 +83,7 @@ if [ $CANAL = true ]; then
 cat >> "$KIND_CONFIG_FILE" <<EOF
 networking:
   disableDefaultCNI: true # disable kindnet
-  podSubnet: 10.244.0.0/16 # set to Canal's default subnet
+  podSubnet: 192.168.0.0/16 # set to Calico's default subnet
 EOF
 fi
 
@@ -98,10 +99,10 @@ fi
 echo "Kind configuration file ($KIND_CONFIG_FILE): "
 cat "$KIND_CONFIG_FILE"
 
-kind create cluster --config "$KIND_CONFIG_FILE" --name "$CLUSTER_NAME" --image "$NODE_IMAGE"
+kind create cluster --config "$KIND_CONFIG_FILE" --name "$CLUSTER_NAME"
 
 if [ $CANAL = true ]; then
-    kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/canal.yaml
+    kubectl apply -f "https://docs.projectcalico.org/$CANAL_VERSION/manifests/calico.yaml"
 fi
 
 # Wait until KIND cluster nodes are Ready
